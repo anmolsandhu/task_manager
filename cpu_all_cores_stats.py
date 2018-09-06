@@ -5,6 +5,8 @@ cpu_stat_file = '/proc/stat'
 
 #constants for get_cores() function
 cpu_signature = 'cpu'
+interupt_signature = 'intr'
+context_signature = 'ctxt'
 cpu_position = 0
 
 #indexes for cpu vals
@@ -26,8 +28,39 @@ class cpu_cores_stats():
 		#getting the intial value of stat at startup
 		fp = open(cpu_stat_file)
 		self.cpu_prev_state_stats = self.get_stats(fp)
+
+		self.prev_interupts = self.get_interupts(fp)
+		self.prev_contexts = self.get_contexts(fp)
+		fp.close()
+		#self.prev_contexts = self.get_contexts(fp)
 		#self.cpu_current_state_stats = {}
 		#print self.cpu_prev_state_stats
+
+	def get_contexts(self, fp):
+		fp.seek(0)
+
+		contexts = {}
+
+		for line in fp:
+			if line[0:4] == context_signature:
+				line = line.split()
+				return int(line[1])
+		# 		contexts[line[0]] = line[1]
+
+		# return int(contexts)
+
+	def get_interupts(self, fp):
+		fp.seek(0)
+
+		interupts = {}
+		for line in fp:
+			l = line.split()
+			if l[0] == interupt_signature:
+				return int(l[1])
+		# 		interupts[interupt_signature] = l[1]
+
+
+		# return int(interupts)
 
 	#returns {cpu: [user_utilization, system_utilization, overall_utilization]}
 	def cpu_interval_data(self):
@@ -36,8 +69,33 @@ class cpu_cores_stats():
 		cpu_current_state_stats = self.get_stats(fp)
 
 		cpu_interval_stats = self.cpu_utilization_stats(cpu_current_state_stats)
+
+		interupt_interval_stat = {}
+		context_interval_stat = {}
+		interupt_interval_stat[interupt_signature] = self.get_interupt_interval(fp)
+		context_interval_stat[context_signature] = self.get_context_interval(fp)
 #		
+		fp.close()
+		cpu_interval_stats.update(interupt_interval_stat)
+		cpu_interval_stats.update(context_interval_stat)
+
 		return cpu_interval_stats
+
+	def get_interupt_interval(self, fp):
+		
+		current_interupts = self.get_interupts(fp)
+		interval_interupts = current_interupts - self.prev_interupts
+
+		self.prev_interupts = current_interupts
+		return interval_interupts
+
+	def get_context_interval(self, fp):
+
+		current_contexts = self.get_contexts(fp)
+		interval_contexts = current_contexts - self.prev_contexts
+		self.prev_contexts = current_contexts
+
+		return interval_contexts
 
 
 	#returns {cpu: [user_utilization, system_utilization, overall_utilization]}
@@ -100,6 +158,6 @@ class cpu_cores_stats():
 
 if __name__ == "__main__":
 	a = cpu_cores_stats()
-	for i in range(10):
-		time.sleep(3)
+	for i in range(3):
+		time.sleep(2)
 		print a.cpu_interval_data() 
