@@ -5,6 +5,7 @@ import time
 proc_path = '/proc'
 uptime_file = '/proc/uptime'
 cpu_stat_file = '/proc/stat'
+passwd_file = '/etc/passwd'
 
 class get_process_info():
 
@@ -26,13 +27,15 @@ class get_process_info():
 
 		sorted_process_stats = self.sort_the_proc(process_interval_stats)
 
-		print sorted_process_stats
+		#print sorted_process_stats
 
 		#setting the current to prev stats
 		self.prev_process_stats = current_stats
 
 		#self.idle time is changed in calculate_stats
 		self.prev_cpu_idle_time = self.get_cpu_idle_time()
+
+		return sorted_process_stats
 
 	def sort_the_proc(self, process_interval_stats):
 
@@ -68,9 +71,11 @@ class get_process_info():
 				sys_utilization = (sys_time_interval / float(total_time)) * 100
 				overall_utilization = ((usr_time_interval + sys_time_interval)  / float(total_time)) * 100
 
+				user_name = self.get_user_name(curr_process[2])
+
 				process_stats.append(curr_process[0]) # process id  0
 				process_stats.append(curr_process[1]) # program name 1
-				process_stats.append(curr_process[2]) # effective_user_ id 2
+				process_stats.append(user_name) 	  # effective_user_ id 2
 				process_stats.append(curr_process[5]) # virtual memory total 3
 				process_stats.append(curr_process[6]) # res memory size 4
 				process_stats.append(usr_utilization) # usr utilization 5
@@ -82,7 +87,38 @@ class get_process_info():
 
 		return all_process_stats
 
+	def get_user_name(self, user_id):
+		all_users = self.read_passwd_file()
+		userid = str(user_id)
+		#print all_users
+		user_name = None
+		for user in all_users:
+			#print userid, "     ",  user[2], "    ", user[0] 
+			if userid == user[2]:
+				user_name =  user[0]
+				break
 
+		return user_name
+		
+
+	def read_passwd_file(self):
+		fp = open(passwd_file)
+		all_users = []
+		for line in fp:
+			count = 0
+			data = ''
+			for char in line:
+				if char == ':':
+					count += 1
+				if count == 3:
+					break
+				else:
+					data += char
+
+			data = data.split(':')
+			all_users.append(data)
+
+		return all_users
 
 	def process_last_active(self, process_id):
 
@@ -102,8 +138,12 @@ class get_process_info():
 
 		process_stats = []
 		for file_path in self.process:
-			fp = open(file_path)
-			process_stats.append(self.get_process_stats(fp))
+			try:
+				fp = open(file_path)
+				process_stats.append(self.get_process_stats(fp))
+			except Exception:
+				pass
+				#print "cant open file path: ", file_path
 		
 		#print process_stats
 		return process_stats
@@ -165,9 +205,9 @@ def get_process_paths(process_folder):
 
 if __name__ == "__main__":
 	a = get_process_info()
-	for i in range(5):
-		time.sleep(2)
-		a.get_processes_stats_interval()
+	for i in range(20):
+		time.sleep(1)
+		print a.get_processes_stats_interval()
 
 
 
