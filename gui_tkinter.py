@@ -239,36 +239,83 @@ class NetworkStatstics(tk.Frame):
 		
 		button1.pack()
 
-		self.listbox = tk.Listbox(self)
-		self.listbox.insert(0, "disk_r     disksecread    disk_w     disksecwritten")
+		w = Label(self , text="Filter")
+		w.pack()
+
+		self.entry_box = Entry(self , width=10)
+		self.entry_box.pack()
+
+
+		self.listbox = tk.Listbox(self, height=25)
+		self.listbox.insert(0, "program_name       source_address       destination_address        username       protocol       inode")
 		self.listbox.itemconfig(0, {'bg':'red'})
+
 		self.listbox.pack(side = BOTTOM, fill = BOTH)
 
 		#intializing the network stats
 		self.net_stats = TcpUdp()
 
 		self.time = 0
+		
+		#print "network class initiated"
 
 
-		def clear_listbox(self):
-			self.listbox.delete(1, END)
+	def set_filter_box_val(self, network_stats):
+		filter_val = self.entry_box.get()
+		
+
+		filter_stats = []
+		if filter_val != '':
+			for conn in network_stats:
+				if filter_val in conn:
+					filter_stats.append(conn)
+		else:
+			return network_stats
+
+		return filter_stats
 
 
-		def fill_listbox(self, disk_stats):
-			self.listbox.insert(1, disk_stats)
+	def clear_listbox(self):
+		self.listbox.delete(1, END)
+
+
+	def fill_listbox(self, network_stat):
+		count = 1
+		for data in network_stat:
+			self.listbox.insert(count, data)
+			count += 1
 			
+	def update_stats(self):
+		network_stat = self.get_network_labelbox_input()
+		filter_stats = self.set_filter_box_val(network_stat)
+		self.clear_listbox()
+		self.fill_listbox(filter_stats)
+		self.listbox.after(self.time + 1000, self.update_stats)
 
-		def update_stats(self):
-			disk_stats = self.get_network_labelbox_input()
-			self.clear_listbox()
-			self.fill_listbox(disk_stats)
-			self.listbox.after(self.time + 1000, self.update_stats)
+	def get_network_labelbox_input(self):
+		tcp_udp_con = self.net_stats.get_active_tcp_conncetions()
 
-		def get_network_labelbox_input(self):
-			tcp_udp_con =  self.net_stats.get_active_tcp_conncetions()
+		label_box_output = []
+		for conn in tcp_udp_con:
+			label_box_output.append(self.process_input(conn))
 
-			for conn in tcp_udp_con:
-				print tcp_udp_con
+		#print label_box_output
+		return label_box_output
+
+	def process_input(self, conn):
+		program_name = conn[1][0]
+
+		protocol = conn[0][0]
+
+		source_address = conn[0][1]
+		destination_address = conn[0][2]
+		username = conn[0][3]
+		inode = conn[0][4]
+ 
+		label_input = str(program_name)  + "           " + str(source_address) + "          " + str(destination_address) + "              " + str(username)  + "            " + str(protocol) + "           "+  str(inode)
+
+		return label_input 
+
 
 class Process_info(tk.Frame):
 
@@ -281,7 +328,14 @@ class Process_info(tk.Frame):
 							command=lambda: controller.show_frame(StartPage))
 		button1.pack()
 
-		self.listbox = tk.Listbox(self)
+		w = Label(self , text="Filter")
+		w.pack()
+
+		self.entry_box = Entry(self , width=10)
+		self.entry_box.pack()
+
+
+		self.listbox = tk.Listbox(self , height=25)
 		self.listbox.insert(0, "procid     procname     username   usertime     systemtime    virtualmem   resmemory")
 		self.listbox.itemconfig(0, {'bg':'red'})
 		self.listbox.pack(side = BOTTOM, fill = BOTH)
@@ -292,8 +346,26 @@ class Process_info(tk.Frame):
 		#initialize the process class 
 		self.process_info = get_process_info()
 
+
+
+	def set_filter_box_val(self, process_stats):
+		filter_val = self.entry_box.get()
+		
+
+		filter_stats = []
+		if filter_val != '':
+			for process in process_stats:
+				if filter_val in process:
+					filter_stats.append(process)
+		else:
+			return process_stats
+
+		return filter_stats
+
+
 	def clear_listbox(self):
 		self.listbox.delete(1, END)
+
 
 	def fill_listbox(self, proc_info):
 		count = 1
@@ -301,11 +373,15 @@ class Process_info(tk.Frame):
 			self.listbox.insert(count, data)
 			count += 1
 
+
 	def update_stats(self):
 		process_stats = self.get_process_label_box_input()
+		filter_stats = self.set_filter_box_val(process_stats)
+		print filter_stats
 		self.clear_listbox()
-		self.fill_listbox(process_stats)
+		self.fill_listbox(filter_stats)
 		self.listbox.after(self.time + 1000, self.update_stats)
+
 
 	def get_process_label_box_input(self):
 		process_stats = self.process_info.get_processes_stats_interval()

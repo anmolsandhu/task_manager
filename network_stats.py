@@ -32,12 +32,17 @@ class TcpUdp():
 		#print self.process_paths
 		self.matching_nodes = self.match_inode()
 
+		#print self.matching_nodes
+		return self.matching_nodes
 
 	def match_inode(self):
 
 		matches = []
 		for process in self.process_paths:
 			inode_list = self.get_process_info(process)
+			if inode_list == None:
+				continue
+
 			#time.sleep(1)
 			for connection in self.tcp_connections:
 				for inode in inode_list[1]:
@@ -56,7 +61,7 @@ class TcpUdp():
 			user_name = self.get_user_name(connection[0][3])
 			connection[0][3] = user_name
 
-		print matches
+		return matches
 
 	
 	def get_user_name(self, user_id):
