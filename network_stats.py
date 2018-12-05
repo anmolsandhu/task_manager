@@ -143,6 +143,8 @@ class TcpUdp():
 			rem_addr = info[2][:8]
 			user_id = info[7]
 			inode = info[9]
+			local_port = int(info[1][9:], 16)
+			rem_port = int(info[2][9:], 16)
 
 			temp = []
 
@@ -155,6 +157,9 @@ class TcpUdp():
 			temp.append(rem_address)
 			temp.append(user_id)
 			temp.append(inode)
+			temp.append(local_port)
+			temp.append(rem_port)
+			
 
 			tcp_data.append(temp)
 
@@ -177,6 +182,8 @@ class TcpUdp():
 			rem_addr = info[2][:8]
 			user_id = info[7]
 			inode = info[9]
+			local_port = int(info[1][9:], 16)
+			rem_port = int(info[2][9:], 16)
 
 			temp = []
 
@@ -189,6 +196,8 @@ class TcpUdp():
 			temp.append(rem_address)
 			temp.append(user_id)
 			temp.append(inode)
+			temp.append(local_port)
+			temp.append(rem_port)
 
 			udp_data.append(temp)
 

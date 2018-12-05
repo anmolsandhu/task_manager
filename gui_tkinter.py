@@ -18,6 +18,12 @@ from proc_stats import get_process_info
 #importing the network stats class
 from network_stats import TcpUdp
 
+#importing the snmp
+from network_snmp_file_stats import SnmpInfo
+
+#import the net dev file
+from network_net_dev import NetworkBytes
+
 
 class SeaofBTCapp(tk.Tk):
 
@@ -239,21 +245,48 @@ class NetworkStatstics(tk.Frame):
 		
 		button1.pack()
 
-		w = Label(self , text="Filter")
+		w = Label(self , text="Filter connections")
 		w.pack()
 
 		self.entry_box = Entry(self , width=10)
 		self.entry_box.pack()
 
+		self.listbox_ip = tk.Listbox(self, height=2)
+		self.listbox_ip.insert(0, " Forwarding   Inrecieves  Outrequests")
+		self.listbox_ip.itemconfig(0, {'bg':'red'})
 
-		self.listbox = tk.Listbox(self, height=25)
-		self.listbox.insert(0, "program_name       source_address       destination_address        username       protocol       inode")
+		self.listbox_tcp = tk.Listbox(self, height=2)
+		self.listbox_tcp.insert(0, "Active_open    Current_establishment    Inseg     Outseg")
+		self.listbox_tcp.itemconfig(0, {'bg':'red'})
+
+		self.listbox_udp = tk.Listbox(self, height=2)
+		self.listbox_udp.insert(0, "Indatagram   Outdatagram")
+		self.listbox_udp.itemconfig(0, {'bg':'red'})
+
+		self.listbox_bytes = tk.Listbox(self, height=2)
+		self.listbox_bytes.insert(0, "recieved_bytes    transmitted_bytes")
+		self.listbox_bytes.itemconfig(0, {'bg':'red'})
+
+		self.listbox = tk.Listbox(self, height=15)
+		self.listbox.insert(0, "program_name       source_address    local_port    destination_address   remote_port     username       protocol       inode")
 		self.listbox.itemconfig(0, {'bg':'red'})
 
-		self.listbox.pack(side = BOTTOM, fill = BOTH)
 
+
+		self.listbox.pack(side = BOTTOM, fill = BOTH)
+		self.listbox_ip.pack(side = TOP, fill = 	BOTH)
+		self.listbox_tcp.pack(side = TOP, fill = 	BOTH)
+		self.listbox_udp.pack(side = TOP, fill = 	BOTH)
+		self.listbox_bytes.pack(side = TOP, fill = 	BOTH)
 		#intializing the network stats
 		self.net_stats = TcpUdp()
+
+		#snmp file data ip tcp udp
+		self.snmp_data = SnmpInfo()
+
+
+		#transmitted bytes
+		self.trasn_rec = NetworkBytes()
 
 		self.time = 0
 		
@@ -277,20 +310,69 @@ class NetworkStatstics(tk.Frame):
 
 	def clear_listbox(self):
 		self.listbox.delete(1, END)
+		self.listbox_ip.delete(1, END)
+		self.listbox_tcp.delete(1, END)
+		self.listbox_udp.delete(1, END)
+		self.listbox_bytes.delete(1, END)
 
 
-	def fill_listbox(self, network_stat):
+	def fill_listbox(self, network_stat, ip_data, tcp_data, udp_data, net_utilization_data):
 		count = 1
 		for data in network_stat:
 			self.listbox.insert(count, data)
 			count += 1
+
+		self.listbox_ip.insert(1, ip_data)
+		self.listbox_tcp.insert(1, tcp_data)
+		self.listbox_udp.insert(1, udp_data)
+
+		self.listbox_bytes.insert(1, net_utilization_data)
 			
 	def update_stats(self):
+
+		#network stats
 		network_stat = self.get_network_labelbox_input()
 		filter_stats = self.set_filter_box_val(network_stat)
+		
+		# ip tcp udp data
+		ip_tcp_udp_stats = self.get_ip_tcp_udp_stats()
+		ip_data = ip_tcp_udp_stats[0]
+		tcp_data = ip_tcp_udp_stats[1]
+		udp_data = ip_tcp_udp_stats[2]
+
+		net_utilization_data = self.get_rec_transmit_bytes()
+
 		self.clear_listbox()
-		self.fill_listbox(filter_stats)
+		self.fill_listbox(filter_stats, ip_data, tcp_data, udp_data, net_utilization_data)
 		self.listbox.after(self.time + 1000, self.update_stats)
+
+	def get_rec_transmit_bytes(self):
+
+		data = self.trasn_rec.get_interval_stats()
+
+		net_uti_data = str(data[0]) + "                     " + str(data[1])
+
+		return net_uti_data
+
+	def get_ip_tcp_udp_stats(self):
+
+		data = self.snmp_data.get_interval_stats()
+
+		
+		ip_tcp_udp_stats = []
+
+		ip_data = str(data[0][0]) + "                     " + str(data[0][1]) + "                      " + str(data[0][2])
+
+		tcp_data = str(data[1][0]) + "                           " + str(data[1][1]) + "                             " + str(data[1][2]) + "                   " + str(data[1][3])
+
+		udp_data = str(data[2][0]) + "                        " + str(data[1][1]) 
+
+		ip_tcp_udp_stats.append(ip_data)
+		ip_tcp_udp_stats.append(tcp_data)
+		ip_tcp_udp_stats.append(udp_data)
+
+		return ip_tcp_udp_stats
+
 
 	def get_network_labelbox_input(self):
 		tcp_udp_con = self.net_stats.get_active_tcp_conncetions()
@@ -311,8 +393,10 @@ class NetworkStatstics(tk.Frame):
 		destination_address = conn[0][2]
 		username = conn[0][3]
 		inode = conn[0][4]
+		local_port = conn[0][5]
+		remote_port = conn[0][6]
  
-		label_input = str(program_name)  + "           " + str(source_address) + "          " + str(destination_address) + "              " + str(username)  + "            " + str(protocol) + "           "+  str(inode)
+		label_input = str(program_name)  + "           " + str(source_address) + "         "+ str(local_port)  +"          " + str(destination_address) + "            "+  str(remote_port) +"              " + str(username)  + "            " + str(protocol) + "           "+  str(inode)
 
 		return label_input 
 
@@ -328,7 +412,7 @@ class Process_info(tk.Frame):
 							command=lambda: controller.show_frame(StartPage))
 		button1.pack()
 
-		w = Label(self , text="Filter")
+		w = Label(self , text="Filter process")
 		w.pack()
 
 		self.entry_box = Entry(self , width=10)

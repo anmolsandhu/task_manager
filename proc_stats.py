@@ -205,7 +205,7 @@ def get_process_paths(process_folder):
 
 if __name__ == "__main__":
 	a = get_process_info()
-	for i in range(20):
+	for i in range(4):
 		time.sleep(1)
 		print a.get_processes_stats_interval()
 
