@@ -2,7 +2,7 @@ import socket
 import struct
 import os
 import time
-
+import socket
 
 #gloabla variables filenames
 tcp_file_path = "/proc/net/tcp"
@@ -31,6 +31,16 @@ class TcpUdp():
 		self.process_paths = get_process_paths()
 		#print self.process_paths
 		self.matching_nodes = self.match_inode()
+
+
+		#additional code for reverseip_lookup
+		for node in self.matching_nodes:
+			try:
+				node[0][1] = socket.gethostbyaddr(  str(node[0][1]) ) [0]
+				node[0][2] = socket.gethostbyaddr(  str(node[0][2]) ) [0]
+			except:
+				pass
+
 
 		#print self.matching_nodes
 		return self.matching_nodes
@@ -265,7 +275,7 @@ def get_process_paths():
 
 if __name__ == "__main__":
 	a = TcpUdp()
-	a.get_active_tcp_conncetions()
+	print a.get_active_tcp_conncetions()
 
 
 

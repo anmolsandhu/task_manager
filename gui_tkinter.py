@@ -420,7 +420,7 @@ class Process_info(tk.Frame):
 
 
 		self.listbox = tk.Listbox(self , height=25)
-		self.listbox.insert(0, "procid     procname     username   usertime     systemtime    virtualmem   resmemory")
+		self.listbox.insert(0, "procid          procname       username       virtual_mem_total         res_mem_total        usr_utilization      sys_utilization      overall_utilization")
 		self.listbox.itemconfig(0, {'bg':'red'})
 		self.listbox.pack(side = BOTTOM, fill = BOTH)
 
@@ -472,7 +472,7 @@ class Process_info(tk.Frame):
 
 		label_box_output = []
 		for process in process_stats:
-			stat_row = str(process[0]) + "     " +  str(process[1])  + "     " + str(process[2])  + "     " + str(process[3])  + "     " +  str(process[4])  + "     " +  str(process[5]) + "     " + str(process[6]) 
+			stat_row = str(process[0]) + "        " +  str(process[1])  + "          " + str(process[2])  + "        " + str(process[3])  + "        " +  str(process[4])  + "          " +  str(process[5]) + "         " + str(process[6]) + "        " + str(process[7]) 
 			label_box_output.append(stat_row)
 
 		return label_box_output  

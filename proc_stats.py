@@ -24,9 +24,11 @@ class get_process_info():
 		# for p in process_interval_stats:
 		# 	if p[7] > 0:
 		# 		print p
+		print "earlier  ", process_interval_stats
 
 		sorted_process_stats = self.sort_the_proc(process_interval_stats)
 
+		print "sorted   ", sorted_process_stats
 		#print sorted_process_stats
 
 		#setting the current to prev stats
@@ -207,7 +209,7 @@ if __name__ == "__main__":
 	a = get_process_info()
 	for i in range(4):
 		time.sleep(1)
-		print a.get_processes_stats_interval()
+		a.get_processes_stats_interval()
 
 
 
